@@ -1,0 +1,24 @@
+# ---- Personal data: NEVER commit ----
+data/
+!data.example/
+tracker.xlsx
+~$*.xlsx
+logs/
+proof/
+interviews/
+jd/
+resumes/
+build/
+INTERVIEW_ROADMAP.md
+
+# ---- Build output / binaries ----
+dist/
+tools/bin/
+
+# ---- Misc ----
+__pycache__/
+*.pyc
+.claude/
+.vscode/
+.DS_Store
+Thumbs.db
