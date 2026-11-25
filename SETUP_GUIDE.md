@@ -25,7 +25,7 @@ pip install openpyxl pdfplumber pypdf
 If Claude runs code in its own sandbox it may install them itself; if it reports a missing library, ask it to run the same pip command.
 
 ### LaTeX resume engine (Tectonic)
-Tailored resumes are produced from your own LaTeX template `data/resume_original_latex.tex`, so the design never changes. `tools/bin/tectonic/tectonic.exe` compiles it locally; nothing is uploaded anywhere. Download `tectonic-0.17.0-x86_64-pc-windows-msvc.zip` from the official GitHub releases of tectonic-typesetting/tectonic and put `tectonic.exe` in that folder. The first compile downloads LaTeX packages once.
+Tailored resumes are produced from your own LaTeX template `data/resume_original_latex.tex`, so the design never changes. `tools/bin/tectonic/tectonic.exe` compiles it locally; nothing is uploaded anywhere. Download `tectonic-0.17.0-x86_64-pc-windows-msvc.zip` from the official GitHub releases of tectonic-typesetting/tectonic and put `tectonic.exe` in that folder. The first compile downloads LaTeX packages once. On macOS, run `brew install tectonic` instead (the tools find it on your PATH).
 
 ## Step 3: Claude settings
 1. **Settings > Capabilities**: switch on **Code execution and file creation** (needed for skills).

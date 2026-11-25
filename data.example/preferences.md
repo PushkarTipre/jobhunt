@@ -7,6 +7,7 @@ KILL SWITCH: change the first line to `PAUSE_ALL: true` and every skill stops at
 ## Targets (jh-profile-builder will refine these from your resume; you approve)
 target_titles_primary: AI Engineer, Machine Learning Engineer
 target_titles_acceptable: Data Scientist, NLP Engineer, MLOps Engineer
+role_focus: AI/ML/GenAI engineering (LLM apps, RAG, model training and deployment)   # the kind of work every skill scores and searches for
 keywords_include: Python, LLM, PyTorch
 keywords_avoid: telecaller, data entry, sales, registration fee, unpaid, commission only, MLM
 locations: <your city>, Remote

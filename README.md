@@ -1,4 +1,4 @@
-# JobHunt: an AI/ML job-hunt assistant built from Claude skills
+# JobHunt: a job-hunt assistant built from Claude skills
 
 A set of 11 Claude skills plus a few small Python tools that run a careful, budgeted job hunt: discover postings, score and vet them, tailor your resume truthfully, apply only where the form is simple and safe, verify confirmations through read-only Gmail, find referral contacts, and prep you for interviews.
 
@@ -23,7 +23,7 @@ Your personal files (`data/`, `tracker.xlsx`, `resumes/`, `jd/`, `logs/`, `proof
 - Claude in Chrome extension (for discovery and applying)
 - Gmail connector, read-only (for confirmation checks)
 - Python 3.9+ and: `pip install openpyxl pdfplumber pypdf`
-- [Tectonic](https://github.com/tectonic-typesetting/tectonic/releases) (LaTeX engine) placed at `tools/bin/tectonic/tectonic.exe` (Windows) or on your PATH
+- [Tectonic](https://github.com/tectonic-typesetting/tectonic/releases) (LaTeX engine) placed at `tools/bin/tectonic/tectonic.exe` (Windows) or on your PATH (macOS: `brew install tectonic`)
 - A LaTeX version of your resume (see step 3)
 
 ## Setup
@@ -71,7 +71,7 @@ Full detail, including the recommended build order and scheduling, is in [SETUP_
 
 ## Customizing
 
-Edit a skill's `SKILL.md`, run `python build_zips.py`, and re-upload that ZIP. The default portals, keywords and scoring rubric (`skills/jh-scoring-vetting/references/rubric.md`) target AI/ML roles in India, so adjust them for your field and country.
+Edit a skill's `SKILL.md`, run `python build_zips.py`, and re-upload that ZIP. Set `role_focus`, the target titles and `keywords_include` in `data/preferences.md` to your field: discovery, scoring, tailoring, referrals and interview prep all read them. Then adjust the role-fit examples in `skills/jh-scoring-vetting/references/rubric.md` (they currently describe Flutter/mobile roles). The default portals target India.
 
 ## Privacy
 

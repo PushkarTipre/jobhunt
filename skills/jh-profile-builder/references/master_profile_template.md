@@ -10,16 +10,19 @@
 - Portfolio: 
 
 ## Summary variants
-### GenAI-focused
-(3 lines, facts from this profile only)
-### ML-engineering-focused
-### Data-science-focused
+One variant per direction in `role_focus` and the target titles (3 lines each, facts from this profile only). For a Flutter/mobile profile, for example:
+### Mobile (Flutter)-focused
+### Full-stack (Flutter + Django)-focused
+### Backend (Python/Django)-focused
 
 ## Experience
-### Company Name — Job Title (Mon YYYY – Mon YYYY)
-Location: City
-- Bullet in the resume's own facts, with the measurable result if true [RAG, PyTorch]
-- Another bullet [MLOps, AWS]
+### Company Name — Job Title (dates exactly as the resume writes them)
+Location: City (blank if the resume gives none)
+- Bullet in the resume's own facts, with the measurable result if true [Flutter, BLoC]
+- Another bullet [Django, REST API]
+
+#### Client project name — stack (only when one role holds several projects)
+- Bullet for that project [WebRTC, Socket.IO]
 
 ## Projects
 ### Project name

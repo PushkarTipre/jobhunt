@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""
+r"""
 Render a tailored resume from JSON into the user's own LaTeX template and compile it to PDF.
 The design (preamble, fonts, contact header, education, achievements) is copied VERBATIM from
 data/resume_original_latex.tex; only the Summary, Skills, Experience and Projects bodies are generated.
@@ -16,9 +16,13 @@ JSON (strings may use **bold** markers; plain text otherwise, LaTeX characters a
     {"company": "Acme Corp", "company_dates": "Jan 2024 – Present", "location": "City, Country",
      "roles": [{"title": "...", "dates": "..."}], "bullets": ["..."]},
     {"company": "Example Ltd", "company_dates": "Jun 2023 – Dec 2023",
-     "title": "Intern", "location": "City, Country (Remote)", "bullets": ["..."]}],
+     "title": "Intern", "location": "City, Country (Remote)", "bullets": ["..."]},
+    {"company": "Studio Co", "company_dates": "Jul 2025 – Present", "title": "Software Engineer",
+     "sub_projects": [{"name": "Client App", "bullets": ["..."]}]}],
   "projects": [{"name": "Project Name", "bullets": ["..."]}] }
-Project stack and link come from the template. Needs Tectonic (tools/bin/tectonic/tectonic.exe or on PATH).
+Project and client-project (sub_projects) stack and link come from the template; client projects are written there as
+\resumeSubProject{name}{stack}{link}, and a link may be empty. Section headings are copied from the template's own
+\section lines (under the %-----------SUMMARY----------- style markers). Needs Tectonic (tools/bin/tectonic/tectonic.exe or on PATH).
 Exit: 0 ok | 1 compile error or too many pages | 5 compiler missing
 """
 import argparse, json, os, re, shutil, subprocess, sys, tempfile
@@ -72,9 +76,55 @@ def split_template(t):
     head, rest2 = rest.split("%-----------SUMMARY-----------", 1)
     tail = "%-----------EDUCATION-----------" + rest2.split("%-----------EDUCATION-----------", 1)[1]
     projects = {}
-    for m in re.finditer(r"\\textbf\{([^}]+)\}\s*\$\|\$\s*\\emph\{([^}]+)\}\s*\\href\{([^}]+)\}", t):
-        projects[m.group(1).strip()] = (m.group(2).strip(), m.group(3).strip())
-    return pre, head, tail, projects
+    for m in re.finditer(r"\\textbf\{([^}]+)\}\s*\$\|\$\s*\\emph\{([^}]+)\}(?:\s*\\href\{([^}]+)\})?", t):
+        projects[m.group(1).strip()] = (m.group(2).strip(), (m.group(3) or "").strip())
+    subs = {}
+    for m in re.finditer(r"\\resumeSubProject\s*\{([^}]*)\}\s*\{([^}]*)\}\s*\{([^}]*)\}", t):
+        subs[m.group(1).strip()] = (m.group(2).strip(), m.group(3).strip())
+    return pre, head, tail, projects, subs
+
+
+DEFAULT_HEADERS = {
+    "SUMMARY": "\\section{\\textcolor{cyan}{PROFESSIONAL SUMMARY}}",
+    "TECHNICAL SKILLS": "\\section{\\textcolor{cyan}{TECHNICAL SKILLS}}",
+    "EXPERIENCE": "\\section{\\textcolor{cyan}{PROFESSIONAL EXPERIENCE}}",
+    "PROJECTS": "\\section{\\textcolor{cyan}{ACADEMIC PROJECTS}}",
+}
+
+
+def section_headers(t):
+    """Reuse the template's own \\section line for each generated section, so its heading text and style stay."""
+    hs = dict(DEFAULT_HEADERS)
+    for key in hs:
+        m = re.search(r"%-+" + re.escape(key) + r"-+(.*?)(?=%-{5,}|\\end\{document\})", t, re.S)
+        h = m and re.search(r"^\s*(\\section\*?\{.*\})\s*$", m.group(1), re.M)
+        if h:
+            hs[key] = h.group(1)
+    return hs
+
+
+def project_gap(t):
+    """Vertical gap the template puts between two projects (the generator used to hard-code -15pt)."""
+    m = re.search(r"%-+PROJECTS-+(.*?)(?=%-{5,}|\\end\{document\})", t, re.S)
+    g = m and re.search(r"\\resumeItemListEnd\s*(\\vspace\{[^}]*\})?\s*\\resumeProjectHeading", m.group(1))
+    if g:
+        return g.group(1) or ""
+    return "\\vspace{-15pt}"
+
+
+def canon(s):
+    """Spelling-neutral name: LaTeX \\& and ---/-- read the same as &, em dash and en dash."""
+    s = str(s).replace("\\&", "&").replace("---", "\u2014").replace("--", "\u2013")
+    return re.sub(r"\s+", " ", s).strip().lower()
+
+
+def lookup(meta, name, kind):
+    """Find a template entry by its JSON name; returns the template's own spelling so it is output verbatim."""
+    want = canon(name)
+    for k, v in meta.items():
+        if canon(k) == want:
+            return k, v
+    raise ValueError(f"{kind} '{name}' not found in the template; names must match exactly")
 
 
 def items(bullets):
@@ -82,17 +132,19 @@ def items(bullets):
 
 
 def build(data, t):
-    pre, head, tail, proj_meta = split_template(t)
+    pre, head, tail, proj_meta, sub_meta = split_template(t)
+    hdr = section_headers(t)
+    gap = project_gap(t)
     if data.get("headline"):
         head = re.sub(r"(\{\\small \\textbf\{)(.*?)(\}\} \\\\ \\vspace\{2pt\})",
                       lambda m: m.group(1) + tex(data["headline"]).replace("|", "$|$") + m.group(3), head, count=1)
     b = [pre, "\\begin{document}", head]
-    b.append("%-----------SUMMARY-----------\n\\section{\\textcolor{cyan}{PROFESSIONAL SUMMARY}}\n\\vspace{1pt}\n"
+    b.append("%-----------SUMMARY-----------\n" + hdr["SUMMARY"] + "\n\\vspace{1pt}\n"
              + tex(data["summary"]) + "\\vspace{-5pt}\n\n")
-    b.append("%-----------TECHNICAL SKILLS-----------\n\\vspace{-5pt}\n\\section{\\textcolor{cyan}{TECHNICAL SKILLS}}\n\\small\n")
+    b.append("%-----------TECHNICAL SKILLS-----------\n\\vspace{-5pt}\n" + hdr["TECHNICAL SKILLS"] + "\n\\small\n")
     lines = [f"\\noindent\\textbf{{{esc(g['category'])}}}: " + ", ".join(esc(i) for i in g["items"]) for g in data["skills"]]
     b.append(" \\\\\n".join(lines) + "\n\\normalize\n\n".replace("\\normalize", "\\normalsize"))
-    b.append("%-----------EXPERIENCE-----------\n\\vspace{-5pt}\n\\section{\\textcolor{cyan}{PROFESSIONAL EXPERIENCE}}\n\\vspace{1pt}\n\\resumeSubHeadingListStart\n\n")
+    b.append("%-----------EXPERIENCE-----------\n\\vspace{-5pt}\n" + hdr["EXPERIENCE"] + "\n\\vspace{1pt}\n\\resumeSubHeadingListStart\n\n")
     for e in data["experience"]:
         if e.get("roles"):
             b.append(f"  \\resumeSubheading\n    {{{tex(e['company'])}}}{{{esc(e['company_dates'])}}}\n    {{{esc(e.get('location', ''))}}}{{}}\n")
@@ -100,19 +152,27 @@ def build(data, t):
                 b.append(f"  \\resumeSubSubheading\n    {{{tex(r['title'])}}}{{{esc(r['dates'])}}}\n")
         else:
             b.append(f"  \\resumeSubheading\n    {{{tex(e['company'])}}}{{{esc(e.get('company_dates') or e.get('dates'))}}}\n    {{{esc(e['title'])}}}{{{esc(e.get('location', ''))}}}\n")
-        b.append(items(e["bullets"]) + "  \\vspace{0pt}\n\n")
+        if not e.get("bullets") and not e.get("sub_projects"):
+            raise ValueError(f"experience '{e.get('company')}' needs bullets or sub_projects")
+        if e.get("bullets"):
+            b.append(items(e["bullets"]))
+        for sp in e.get("sub_projects", []):
+            name, (stack, link) = lookup(sub_meta, sp["name"], "client project")
+            b.append(f"  \\resumeSubProject{{{name}}}{{{stack}}}{{{link}}}\n")
+            if sp.get("bullets"):
+                b.append(items(sp["bullets"]))
+        b.append("  \\vspace{0pt}\n\n")
     b.append("\\resumeSubHeadingListEnd\n\n")
-    b.append("%-----------PROJECTS-----------\n\\section{\\textcolor{cyan}{ACADEMIC PROJECTS}}\n\\vspace{0pt}\n\\resumeSubHeadingListStart\n\n")
-    for n, p in enumerate(data.get("projects", [])):
-        stack, link = proj_meta.get(p["name"], ("", ""))
-        if not link:
-            raise ValueError(f"project '{p['name']}' not found in the template; names must match exactly")
-        b.append(f"  \\resumeProjectHeading\n    {{\\textbf{{{esc(p['name'])}}} $|$ \\emph{{{esc(stack)}}}\n"
-                 f"    \\href{{{link}}}{{\\textcolor{{blue}}{{\\underline{{Link}}}}}}}}{{}}\n")
-        b.append(items(p["bullets"]))
-        if n < len(data["projects"]) - 1:
-            b.append("    \\vspace{-15pt}\n")
-    b.append("\\resumeSubHeadingListEnd\n\\vspace{-10pt}\n\n")
+    if data.get("projects"):
+        b.append("%-----------PROJECTS-----------\n" + hdr["PROJECTS"] + "\n\\vspace{0pt}\n\\resumeSubHeadingListStart\n\n")
+        for n, p in enumerate(data["projects"]):
+            name, (stack, link) = lookup(proj_meta, p["name"], "project")
+            href = f"\n    \\href{{{link}}}{{\\textcolor{{blue}}{{\\underline{{Link}}}}}}" if link else ""
+            b.append(f"  \\resumeProjectHeading\n    {{\\textbf{{{name}}} $|$ \\emph{{{stack}}}{href}}}{{}}\n")
+            b.append(items(p["bullets"]))
+            if gap and n < len(data["projects"]) - 1:
+                b.append("    " + gap + "\n")
+        b.append("\\resumeSubHeadingListEnd\n\\vspace{-10pt}\n\n")
     b.append(tail)
     return "".join(b)
 

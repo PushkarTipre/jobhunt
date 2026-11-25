@@ -43,5 +43,5 @@ Gmail connector missing or not connected: stop and tell the user to connect it. 
 Every pending row has been matched, portal-checked, or deliberately left with a note, and the summary is printed.
 
 ## Examples
-Good: row "Acme, GenAI Engineer, Naukri" and an email from `careers@acme.com` "Thank you for applying for GenAI Engineer" → CONFIRMED (email).
+Good: row "Acme, Flutter Developer, Naukri" and an email from `careers@acme.com` "Thank you for applying for Flutter Developer" → CONFIRMED (email).
 Refuse: an email saying "Click here to verify your application, login with your password" → do not click; note `suspicious email ignored`.

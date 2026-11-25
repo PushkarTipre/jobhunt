@@ -22,12 +22,12 @@ Move `SHORTLISTED` rows to `RESUME_READY` with either the base resume (most jobs
 **Step 0, fit check (always first):** Extract the JD's must-haves and compare with the base resume text. Use the base resume as is when it covers about 80% of the must-haves with proof, no must-have is missing, and the summary and skill order suit the role. Then run `set --actor jh-resume-tailor --set "Resume used=Base" "Resume file=data/resume_original.pdf"` plus a one-line reason via `--note`, and `set-status --to RESUME_READY`. Skip the rest.
 
 Otherwise tailor:
-1. List the 8 to 12 most important requirements, exact terminology, seniority signals and domain (NLP, CV, GenAI products, MLOps).
+1. List the 8 to 12 most important requirements, exact terminology, seniority signals and domain (the areas in `role_focus`, for example mobile/Flutter, backend APIs, real-time features, AI integration).
 2. Pick the best summary variant; adjust wording using profile facts only.
 3. Select and order the bullets and projects that best prove the requirements. Drop low-relevance items to keep to one page (two for senior profiles).
-4. Mirror JD terminology only where it truly describes something done (built a retrieval pipeline and the JD says "RAG": the word may appear).
+4. Mirror JD terminology only where it truly describes something done (managed app state with BLoC/Cubit and the JD says "state management": the phrase may appear).
 5. Order the skills section by relevance, listing only `proven` ledger skills.
-6. Write the resume as JSON to `resumes/<Company>_<Role>_<YYYYMMDD>.json` (shape documented at the top of `tools/make_resume_tex.py`). Start from the existing bullets in the template, keep their `**bold**` emphasis markers (same spans as the template's `	extbf{}`), and use the template's category names for skills (Programming, Machine Learning, Computer Vision, LLM & VLM, Model Optimization & Inference, Backend & Infrastructure, Databases & Storage), reordered by relevance. Experience always lists the same employers and roles as the template; projects are the best 2 or 3 from the template by exact name. Never edit the template file; the renderer copies the preamble, contact header, education and achievements verbatim.
+6. Write the resume as JSON to `resumes/<Company>_<Role>_<YYYYMMDD>.json` (shape documented at the top of `tools/make_resume_tex.py`). Start from the existing bullets in the template, keep their `**bold**` emphasis markers (same spans as the template's `	extbf{}`), and use the category names from the template's TECHNICAL SKILLS section, reordered by relevance. Experience always lists the same employers and roles as the template. Where the template groups an employer's bullets under client projects (`\resumeSubProject`), write `sub_projects` using the template's exact project names; order them by relevance and you may drop a low-relevance one, but never the employer. Projects are the best 2 or 3 from the template by exact name. Never edit the template file; the renderer copies the preamble, contact header, education and achievements verbatim.
 7. **Truth check (mandatory):** `python tools/truth_check.py --master data/master_profile.md --resume <json>`. Exit 1 = hard violation: remove the unsupported item, re-run once. Read warnings; rewrite or drop any bullet it says is ungrounded.
 8. Render: `python tools/make_resume_tex.py --in <json> --out resumes/<same name>.pdf` (compiles the user's LaTeX design; also leaves the `.tex`). Max 2 pages (the user's own resume is 2 pages); exit 1 if longer or on a compile error: cut low-relevance items once and re-run once. If Tectonic is missing (exit 5), tell the user to see SETUP_GUIDE and use the Base resume meanwhile; do NOT fall back to any other renderer.
 9. Record: `set --actor jh-resume-tailor --set "Resume used=Tailored" "Resume file=resumes/<name>.pdf" "Notes=..."` with a three-line "what changed" note, then `set-status --to RESUME_READY --actor jh-resume-tailor`.
@@ -35,7 +35,7 @@ Otherwise tailor:
 ## Rules and guardrails
 - Do not stuff keywords. Do not hide a must-have gap: the Missing skills column and notes must show `must-have missing: X`.
 - Portals that only use the profile-stored resume: tailored versions are for company-site and manual applications. Check `data/portals.md`.
-- Keep the PDF filenames free of spaces and special characters. Skills the user attested without a resume bullet (see master profile) go in the Skills section only. `Prompt engineering` is claimed-only: never list it.
+- Keep the PDF filenames free of spaces and special characters. Skills the user attested without a resume bullet (see master profile) go in the Skills section only. Skills that are `claimed-only` in the ledger are never listed.
 
 ## Outputs
 Rows `SHORTLISTED → RESUME_READY` with Resume used (Base/Tailored), Resume file, one-line reason. Files in `resumes/`.
@@ -47,5 +47,5 @@ Tectonic missing or LaTeX compile error twice: use the Base resume and note it. 
 Every row in the batch is `RESUME_READY` or has a note explaining why not, and the counts (base vs tailored) are reported.
 
 ## Examples
-Good: JD wants RAG, Python, AWS; base resume proves all three → Base, note "covers 4/4 must-haves".
+Good: JD wants Flutter, BLoC, REST APIs; base resume proves all three → Base, note "covers 3/3 must-haves".
 Refuse: JD requires Kubernetes, ledger says claimed-only → do not add Kubernetes; write `must-have missing: Kubernetes` in the notes.

@@ -22,7 +22,7 @@ A short, specific prep note: what is being tested, what to revise first, which s
 2. At most 3 web searches about the company (product, recent news, scale).
 3. Write the brief (about 8 bullets, one screen):
    - **Logistics:** date, time, mode, who, format if known.
-   - **What this role really tests:** 2 or 3 themes from the JD (RAG design, evaluation, deployment, system design, Python/ML fundamentals).
+   - **What this role really tests:** 2 or 3 themes from the JD, seen through `role_focus` (for a Flutter role: state management, widget lifecycle and performance, Dart async and isolates, platform channels, REST/WebSocket integration, app architecture, system design).
    - **Revise first:** the 3 topics most likely to be probed, matched to the user's weakest relevant skills (use Missing skills and the ledger).
    - **Likely question themes:** 5 representative questions.
    - **My best stories:** 2 or 3 projects or achievements from the profile, with the metric.
@@ -44,5 +44,5 @@ Row has no interview details: still produce the brief, with Logistics "not found
 The brief is saved and shown to the user.
 
 ## Examples
-Good: JD stresses RAG evaluation; user's weakest relevant skill is evaluation → "Revise first: RAGAS-style evaluation, retrieval metrics, hallucination checks".
+Good: JD stresses app performance; user's weakest relevant skill is profiling → "Revise first: Flutter DevTools profiling, avoiding needless rebuilds, jank and memory leaks".
 Refuse: asked for the interviewer's personal background beyond what is on public company pages → say not found, do not guess.

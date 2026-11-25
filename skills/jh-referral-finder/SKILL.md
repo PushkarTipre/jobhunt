@@ -1,6 +1,6 @@
 ---
 name: jh-referral-finder
-description: For top-scoring or manual-apply jobs, find real people who could refer the user (recruiters, hiring managers, AI team engineers, alumni, ex-colleagues), record them in the Contacts tab, and draft a short outreach message for the user to send. Use when the user says "find contacts for [company]", "find referrals", or when jh-orchestrator runs scan mode. Never sends anything.
+description: For top-scoring or manual-apply jobs, find real people who could refer the user (recruiters, hiring managers, engineers on the hiring team, alumni, ex-colleagues), record them in the Contacts tab, and draft a short outreach message for the user to send. Use when the user says "find contacts for [company]", "find referrals", or when jh-orchestrator runs scan mode. Never sends anything.
 ---
 
 # jh-referral-finder
@@ -20,7 +20,7 @@ Increase the chance of being seen by finding a few relevant people per important
 `tracker.py list --status SHORTLISTED,RESUME_READY,MANUAL_REQUIRED --min-score 80 --referral-empty --order score --limit 5 --fields "Job ID,Company,Title,Fit score,Status"` (use `--min-score 0` for MANUAL_REQUIRED rows), `data/master_profile.md` for common ground (college, past employers, skills). If the user names a company, use that row instead.
 
 ## Steps
-1. For each job, web-search the company's public pages for the hiring side: recruiter or talent acquisition, the AI/ML hiring manager, engineers on the AI team, and people sharing something with the user (same college, ex-employer).
+1. For each job, web-search the company's public pages for the hiring side: recruiter or talent acquisition, the hiring manager for the role's team (for example the mobile or backend lead), engineers on that team, and people sharing something with the user (same college, ex-employer).
 2. Optionally (if enabled) view a few LinkedIn profile cards to confirm role and company. Count each view against the 10-view budget.
 3. Pick at most 3 contacts per job. Add each: `tracker.py add-contact --json-file c.json` with keys `Job ID`, `Name`, `Role`, `Relation type` (recruiter, hiring manager, team member, alumni), `Profile link`, `Public email` + `Email source` (only if public), `Why relevant`, `Outreach draft`. The tool sets `Referral possible = Yes` and links the contact on the job row, and `Outreach status = Not contacted`.
 4. Draft 4 to 6 lines per contact: who the user is, the specific role (title and job link), one proof point from the profile (with a real metric), a polite ask for a referral or a pass-along, resume offered. No flattery, no claims not in the profile, no mention of anything private.
@@ -41,5 +41,5 @@ Cap reached (exit 2 from add-contact) → stop adding for that job. LinkedIn war
 Each of the up-to-5 jobs has contacts recorded or a note "no suitable contacts found", and the drafts are shown.
 
 ## Examples
-Good: Acme AI team page lists "Priya S., ML Lead" → relation `hiring manager`, draft cites the user's RAG project metric.
+Good: Acme engineering page lists "Priya S., Mobile Lead" → relation `hiring manager`, draft cites the user's strongest app metric.
 Refuse: user asks to "guess the recruiter's email as first.last@acme.com" → decline; only publicly shown emails with a source are stored.

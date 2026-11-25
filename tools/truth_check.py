@@ -84,6 +84,9 @@ def main():
     for grp in r.get("skills", []):
         for item in grp.get("items", []):
             k = norm(item)
+            parts = [norm(x) for x in re.split(r"[/,]", str(item)) if x.strip()]
+            if k not in proven and parts and all(x in proven for x in parts):
+                continue  # combined item such as "Docker/Podman", every part proven
             if k in claimed and k not in proven:
                 hard.append(f"skill '{item}' is claimed-only in the ledger; do not list it")
             elif k not in proven:
@@ -108,6 +111,12 @@ def main():
             if nospace(d) not in mns:
                 hard.append(f"dates '{d}' for {e.get('company')} not found in master profile")
 
+    # client projects inside an experience entry
+    for e in r.get("experience", []):
+        for sp in e.get("sub_projects", []):
+            if sp.get("name") and norm(sp["name"]) not in mt:
+                hard.append(f"client project '{sp['name']}' under {e.get('company')} not found in master profile")
+
     # project names and headline
     for p in r.get("projects", []):
         if p.get("name") and norm(p["name"]) not in mt:
@@ -126,6 +135,7 @@ def main():
     # soft: bullet similarity
     mb = [words(b) for b in master_bullets(master)]
     bullets = [b for e in r.get("experience", []) for b in e.get("bullets", [])]
+    bullets += [b for e in r.get("experience", []) for sp in e.get("sub_projects", []) for b in sp.get("bullets", [])]
     bullets += [b for p in r.get("projects", []) for b in p.get("bullets", [])]
     for b in bullets:
         w = words(b.replace("**", ""))
